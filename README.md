@@ -1,2 +1,2 @@
-# big-brain-compiler
-Custom compiler for the Brainf*ck language, using LLVM.
+# Big Brain Compiler
+Compiler for the Brain F*ck language.
