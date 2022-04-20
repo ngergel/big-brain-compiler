@@ -19,7 +19,8 @@
 // ------------------------------------------------------------
 void ast_builder::visit(std::shared_ptr<ast>& t) {
 
-    std::cout << "visiting: " << brain::token_name(t->token) << "\n";
+    // Make sure we aren't visiting a nil token in the AST.
+    if (brain::DEBUG) assert(t->token != brain::nil);
 
     // Reduce into each of the possible cases.
     switch (t->token) {
