@@ -2,8 +2,6 @@
 //  main.cpp
 //  
 //  Main file and entry point for the compiler.
-// 
-//  (c) Noah Gergel 2021
 // ------------------------------------------------------------
 
 // Include statments.
@@ -31,9 +29,9 @@ int main(int argc, char** argv) {
     bf_prog << ifs.rdbuf();
 
     // Build the AST.
-    ast_builder ast_pass;
-    std::shared_ptr<ast> tree = std::make_shared<ast>();
-    ast_pass.visit(tree, bf_prog.str(), true);
+    ast_builder ast_pass(bf_prog.str());
+    std::shared_ptr<ast> tree = std::make_shared<ast>(brain::root);
+    ast_pass.visit(tree);
 
     brain::print_ast(tree);
 

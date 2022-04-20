@@ -2,8 +2,6 @@
 //  ast_builder.cpp
 // 
 //  Implementation of the AST builder pass.
-// 
-//  (c) Noah Gergel 2021
 // ------------------------------------------------------------
 
 // Include statements.
@@ -19,38 +17,26 @@
 // 
 //  General visit function for parsing the AST.
 // ------------------------------------------------------------
-void ast_builder::visit(std::shared_ptr<ast>& t, std::string prog, bool is_root) {
+void ast_builder::visit(std::shared_ptr<ast>& t) {
 
-    // If we are visiting the root of the program, go to the root visitor function.
-    if (is_root) {
-        visit_multi(t, brain::root, prog);
-        return;
-    }
-
-    // Scan through the program text until we get to a valid token.
-    size_t it = 0;
-    while (it < prog.length() - 1 && !brain::valid_token(prog[it])) it++;
+    std::cout << "visiting: " << brain::token_name(t->token) << "\n";
 
     // Reduce into each of the possible cases.
-    // Note that we can't directly visit the root node,
-    // that is artificially inserted when building the AST.
-    switch (prog[it]) {
-        case '+':
-            visit_single(t, brain::plus); break;
-        case '-':
-            visit_single(t, brain::minus); break;
-        case '.':
-            visit_single(t, brain::period); break;
-        case ',':
-            visit_single(t, brain::comma); break;
-        case '<':
-            visit_single(t, brain::larrow); break;
-        case '>':
-            visit_single(t, brain::rarrow); break;
-        case '[':
-            visit_multi(t, brain::loop, prog.substr(1, prog.length() - 2)); break;
+    switch (t->token) {
+        case brain::plus:
+        case brain::minus:
+        case brain::period:
+        case brain::comma:
+        case brain::larrow:
+        case brain::rarrow:
+            visit_single(t);
+            break;
+        case brain::root:
+        case brain::loop:
+            visit_multi(t);
+            break;
         default:
-            visit_single(t, brain::nil); break;
+            t = std::make_shared<ast>(brain::nil);
     }
 }
 
@@ -61,37 +47,32 @@ void ast_builder::visit(std::shared_ptr<ast>& t, std::string prog, bool is_root)
 //  Visit a node that will potentially have children.
 //  In bf, this only applies to the root or loop nodes.
 // ------------------------------------------------------------
-void ast_builder::visit_multi(std::shared_ptr<ast>& t, brain::token tok, std::string prog) {
+void ast_builder::visit_multi(std::shared_ptr<ast>& t) {
 
-    // Set the node's token.
-    t->token = tok;
+    // Get the end of the program that we will look at.
+    size_t end = t->token == brain::root ? prog.length() : loop_lookahead(t->idx);
 
-    // If this is a root node, set it's line/char position here.
-    if (tok == brain::root) t->line_num = t->char_num = 1;
+    // Initialize the line, char, and index numbers.
+    size_t line = t->line, chr = t->chr, i = t->idx;
+    if (t->token != brain::root) incr_idx(i, line, chr);
 
     // Scan through the program visiting valid tokens.
-    size_t line_pos = t->line_num, char_pos = t->char_num;
-    for (size_t i = 0; i < prog.length(); i++, char_pos++) {
-        if (prog[i] == '\n') line_pos++, char_pos = 0;
-        if (!brain::valid_token(prog[i])) continue;
+    while (i < end) {
 
-        // Make a new AST node and walk the tree.
-        std::shared_ptr<ast> child = std::make_shared<ast>();
-        t->children.push_back(child), child->parent = t;
-        child->line_num = line_pos, child->char_num = char_pos;
+        // Make a new AST node and walk the tree if we have a valid token.
+        if (brain::valid_token(prog[i])) {
+            std::shared_ptr<ast> child = std::make_shared<ast>(brain::get_token(prog[i]), t, line, chr, i);
+            t->children.push_back(child);
+            visit(child);
 
-        // Make sure to handle loops seperately.
-        visit(child, (prog[i] != '[' ? std::string{prog[i]} : prog.substr(i, loop_lookahead(prog, i) - i + 1)));
-        
-        // Update our index and line/char positions appropriately.
-        if (prog[i] == '[') {
-            size_t loop_size = loop_lookahead(prog, i) - i;
-            for (size_t j = 0; j < loop_size; j++, char_pos++) {
-                if (prog[i + j] == '\n') line_pos++, char_pos = 1;
+            // Also move the index if the child's a loop, so we don't copy it twice.
+            if (child->token == brain::loop) {
+                size_t loop_end = loop_lookahead(i);
+                while (i < loop_end) incr_idx(i, line, chr);
             }
-
-            i += loop_lookahead(prog, i) - i;
         }
+
+        incr_idx(i, line, chr);
     }
 }
 
@@ -102,9 +83,7 @@ void ast_builder::visit_multi(std::shared_ptr<ast>& t, brain::token tok, std::st
 //  Visit a simple or atomic node in the AST. These are most
 //  of the instructions we will see, like + or -.
 // ------------------------------------------------------------
-void ast_builder::visit_single(std::shared_ptr<ast>& t, brain::token tok) {
-    t->token = tok;
-}
+void ast_builder::visit_single(std::shared_ptr<ast>& t) {}
 
 
 // ------------------------------------------------------------
@@ -113,7 +92,7 @@ void ast_builder::visit_single(std::shared_ptr<ast>& t, brain::token tok) {
 //  Scan through the program looking for the index of the
 //  closing bracket, where the opening bracket is at start.
 // ------------------------------------------------------------
-size_t ast_builder::loop_lookahead(std::string prog, size_t start) {
+size_t ast_builder::loop_lookahead(size_t start) {
 
     // Assert that start is at the right token.
     if (brain::DEBUG) assert(prog.length() > start && prog[start] == '[');
@@ -129,4 +108,16 @@ size_t ast_builder::loop_lookahead(std::string prog, size_t start) {
 
     // Return the index of the closing right bracket.
     return end;
+}
+
+
+// ------------------------------------------------------------
+//  incr_idx
+// 
+//  Increment the index while respecting line/chr position.
+//  Does the incrementing inplace.
+// ------------------------------------------------------------
+void ast_builder::incr_idx(size_t& idx, size_t& line, size_t& chr) {
+    idx++, chr++;
+    if (prog[idx] == '\n') idx++, line++, chr = 0;
 }

@@ -2,8 +2,6 @@
 //  util.cpp
 //  
 //  General project-wide utility functions.
-// 
-//  (c) Noah Gergel 2021
 // ------------------------------------------------------------
 
 
@@ -18,7 +16,7 @@
 // ------------------------------------------------------------
 //  valid_token
 // 
-//  Checks if the given token is a bf token.
+//  Checks if the given char is a bf token.
 // ------------------------------------------------------------
 bool brain::valid_token(char c) {
 
@@ -28,7 +26,6 @@ bool brain::valid_token(char c) {
         case '+':
         case '-':
         case '[':
-        case ']':
         case '.':
         case ',':
         case '<':
@@ -50,7 +47,7 @@ void brain::print_ast(std::shared_ptr<ast>& t) {
     // Print this node's information.
     std::cout << "Token: " << token_name(t->token) << "\n"
               << "Number of children: " << t->children.size() << "\n"
-              << "Line and char position: " << t->line_num << ", " << t->char_num << "\n";
+              << "Line and char position: " << t->line << ", " << t->chr << "\n";
     if (t->parent) std::cout << "Parent token: " << token_name(t->parent->token) << "\n";
 
     // Print out the children nodes.
@@ -63,6 +60,12 @@ void brain::print_ast(std::shared_ptr<ast>& t) {
     }
 }
 
+
+// ------------------------------------------------------------
+//  token_name
+// 
+//  Given a token, return the name of the token as string.
+// ------------------------------------------------------------
 std::string brain::token_name(brain::token tok) {
     
     // Just map the token to it's appropriate name.
@@ -86,6 +89,33 @@ std::string brain::token_name(brain::token tok) {
         default:
             return "nil";
     }
+}
 
-    return "nil";
+
+// ------------------------------------------------------------
+//  get_token
+// 
+//  Given a char, return the corresponding token or nil.
+// ------------------------------------------------------------
+brain::token brain::get_token(char c) {
+
+    // Just map the char to the right token.
+    switch (c) {
+        case '+':
+            return brain::plus;
+        case '-':
+            return brain::minus;
+        case '.':
+            return brain::period;
+        case ',':
+            return brain::comma;
+        case '<':
+            return brain::larrow;
+        case '>':
+            return brain::rarrow;
+        case '[':
+            return brain::loop;
+        default:
+            return brain::nil;
+    }
 }
