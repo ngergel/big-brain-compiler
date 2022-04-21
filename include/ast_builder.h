@@ -26,7 +26,7 @@ public:
 
     ~ast_builder() = default;
 
-    // Visitor methods for each type of token.
+    // Visitor functions for each type of token.
     void visit(std::shared_ptr<ast>& t);
 
     void visit_multi(std::shared_ptr<ast>& t);

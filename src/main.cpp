@@ -10,8 +10,13 @@
 #include <sstream>
 #include <string>
 
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/Support/raw_ostream.h"
+
 #include "util.h"
 #include "ast_builder.h"
+#include "code_gen.h"
 
 
 int main(int argc, char** argv) {
@@ -33,7 +38,11 @@ int main(int argc, char** argv) {
     std::shared_ptr<ast> tree = std::make_shared<ast>(brain::root);
     ast_pass.visit(tree);
 
-    brain::print_ast(tree);
+    // Initialize the code gen pass.
+    code_gen gen_pass(std::string(argv[1]), tree);
+    gen_pass.initialize_context();
+
+    gen_pass.mod->print(llvm::errs(), nullptr);
 
     return 0;
 }
