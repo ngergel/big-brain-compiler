@@ -7,5 +7,8 @@ set(src_files
 # Add the executable.
 add_executable(brainc ${src_files})
 
+# Link against LLVM libraries.
+target_link_libraries(brainc ${llvm_libs})
+
 # Move the executable to a project bin directory.
 set_target_properties(brainc PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
