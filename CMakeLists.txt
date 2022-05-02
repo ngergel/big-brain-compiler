@@ -19,7 +19,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 # Find the libraries that correspond to the LLVM components we want to use.
-llvm_map_components_to_libnames(llvm_libs support core irreader codegen)
+llvm_map_components_to_libnames(llvm_libs support core irreader codegen target)
 
 # Include project headers.
 include_directories("${CMAKE_SOURCE_DIR}/include")

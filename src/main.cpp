@@ -38,9 +38,10 @@ int main(int argc, char** argv) {
     std::shared_ptr<ast> tree = std::make_shared<ast>(brain::root);
     ast_pass.visit(tree);
 
-    // Initialize the code gen pass.
-    code_gen gen_pass(std::string(argv[1]), tree);
-    gen_pass.initialize_context();
+    // Initialize the code gen pass and generate the LLVM IR.
+    code_gen gen_pass(std::string{argv[1]});
+    gen_pass.initialize_module();
+    gen_pass.visit(tree);
 
     gen_pass.mod->print(llvm::errs(), nullptr);
 
