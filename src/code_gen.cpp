@@ -30,6 +30,7 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
+#include "llvm/Support/Alignment.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 
 #include "code_gen.h"
@@ -50,12 +51,12 @@ void code_gen::initialize_module() {
     // Create a new builder for the module.
     builder = std::make_unique<llvm::IRBuilder<> >(*ctx);
 
-    // // Initialize all targets.
-    // llvm::InitializeAllTargetInfos();
-    // llvm::InitializeAllTargets();
-    // llvm::InitializeAllTargetMCs();
-    // llvm::InitializeAllAsmParsers();
-    // llvm::InitializeAllAsmPrinters();
+    // Initialize all targets.
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
 
     // // Set the target triple and target machine.
     // std::string cpu = "generic", features = "", err;
@@ -137,6 +138,7 @@ void code_gen::visit_root(std::shared_ptr<ast>& t) {
 
     llvm::ArrayType* cell_ty = llvm::ArrayType::get(builder->getInt8Ty(), brain::CELL_SIZE);
     cell = builder->CreateAlloca(cell_ty, 0, "cell");
+    builder->CreateMemSet(cell, builder->getInt8(0), builder->getInt32(brain::CELL_SIZE), llvm::MaybeAlign(1));
 
     // Loop through visiting all of the root's children.
     for (std::shared_ptr<ast> c : t->children) visit(c);
@@ -184,7 +186,7 @@ void code_gen::visit_period(std::shared_ptr<ast>& t) {
     llvm::FunctionCallee putchar = mod->getOrInsertFunction("putchar", builder->getInt32Ty(), builder->getInt32Ty());
 
     // Extend the cell to be 32 bits and call putchar.
-    llvm::Value* chr = builder->CreateSExt(get_cell(), builder->getInt32Ty(), "sext");
+    llvm::Value* chr = builder->CreateZExt(get_cell(), builder->getInt32Ty(), "zext");
     llvm::CallInst* call = builder->CreateCall(putchar, chr, "putchar_func");
 }
 

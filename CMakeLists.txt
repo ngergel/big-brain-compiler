@@ -18,8 +18,16 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-# Find the libraries that correspond to the LLVM components we want to use.
-llvm_map_components_to_libnames(llvm_libs support core irreader codegen target)
+# Gather LLVM libraries to link against.
+execute_process(COMMAND llvm-config --libs OUTPUT_VARIABLE libs)
+execute_process(COMMAND llvm-config --system-libs OUTPUT_VARIABLE sys_libs)
+execute_process(COMMAND llvm-config --ldflags OUTPUT_VARIABLE ld_flags)
+execute_process(COMMAND llvm-config --cxxflags OUTPUT_VARIABLE cxx_flags)
+
+string(STRIP ${libs} libs)
+string(STRIP ${sys_libs} sys_libs)
+string(STRIP ${ld_flags} ld_flags)
+string(STRIP ${cxx_flags} cxx_flags)
 
 # Include project headers.
 include_directories("${CMAKE_SOURCE_DIR}/include")

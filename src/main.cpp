@@ -14,8 +14,13 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
-#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
+// #include "llvm/Passes/OptimizationLevel.h"
+#include "llvm/IRReader/IRReader.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/TargetRegistry.h"
 
 #include "util.h"
 #include "ast_builder.h"
@@ -46,18 +51,26 @@ int main(int argc, char** argv) {
     gen_pass.initialize_module();
     gen_pass.visit(tree);
 
-    // // Initialize the pass manager.
-    // auto fpm = std::make_unique<llvm::FunctionPassManager>(gen_pass.mod->get());
+    // Initialize the pass manager.
+    llvm::LoopAnalysisManager lam;
+    llvm::FunctionAnalysisManager fam;
+    llvm::CGSCCAnalysisManager cgam;
+    llvm::ModuleAnalysisManager mam;
 
-    // // Add our passes.
-    // fpm->add(llvm::createInstructionCombiningPass());
-    // fpm->add(llvm::createReassociatePass());
-    // fpm->add(llvm::createGVNPass());
-    // fpm->add(llvm::createCFGSimplificationPass());
+    llvm::PassBuilder pb;
 
-    // // Do initialization and then run the pass manager.
-    // fpm->doInitialization();
-    // fpm->run(gen_pass.mod->getFunction("main"));
+    // Register all the basic analyses with the managers.
+    pb.registerModuleAnalyses(mam);
+    pb.registerCGSCCAnalyses(cgam);
+    pb.registerFunctionAnalyses(fam);
+    pb.registerLoopAnalyses(lam);
+    pb.crossRegisterProxies(lam, fam, cgam, mam);
+
+    // Optimize the IR.
+    llvm::FunctionPassManager fpm = pb.buildFunctionSimplificationPipeline(llvm::PassBuilder::OptimizationLevel::O2,
+                                                                           llvm::PassBuilder::ThinLTOPhase::None);
+
+    fpm.run(*gen_pass.mod->getFunction("main"), fam);
 
     gen_pass.mod->print(llvm::errs(), nullptr);
 
