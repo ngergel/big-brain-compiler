@@ -138,7 +138,7 @@ void code_gen::visit_root(std::shared_ptr<ast>& t) {
 
     llvm::ArrayType* cell_ty = llvm::ArrayType::get(builder->getInt8Ty(), brain::CELL_SIZE);
     cell = builder->CreateAlloca(cell_ty, 0, "cell");
-    builder->CreateMemSet(cell, builder->getInt8(0), builder->getInt32(brain::CELL_SIZE), llvm::MaybeAlign(1));
+    builder->CreateMemSet(cell, builder->getInt8(0), builder->getInt32(brain::CELL_SIZE), llvm::MaybeAlign(0));
 
     // Loop through visiting all of the root's children.
     for (std::shared_ptr<ast> c : t->children) visit(c);
