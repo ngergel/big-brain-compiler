@@ -125,17 +125,19 @@ void code_gen::visit_root(std::shared_ptr<ast>& t) {
     if (brain::DEBUG) assert(t->token == brain::root);
 
     // Initialize the main function, and its return value.
-    llvm::FunctionType* mty = llvm::FunctionType::get(builder->getInt32Ty(), std::vector<llvm::Type*>{}, false);
-    llvm::Function* main = llvm::Function::Create(mty, llvm::Function::ExternalLinkage, "main", *mod);
+    llvm::FunctionType* main_ty = llvm::FunctionType::get(builder->getInt32Ty(), std::vector<llvm::Type*>{}, false);
+    llvm::Function* main = llvm::Function::Create(main_ty, llvm::Function::ExternalLinkage, "main", *mod);
 
     // Initialize the entry basic block for main.
     llvm::BasicBlock *entry = llvm::BasicBlock::Create(*ctx, "entry", main);
     builder->SetInsertPoint(entry);
 
-    // Initialize each cell in the array to the 0 constant.
-    for (size_t i = 0; i < cells.size(); i++) {
-        cells[i] = builder->getInt8(0);
-    }
+    // Initialize the index and cell array.
+    idx = builder->CreateAlloca(builder->getInt16Ty(), 0, "idx");
+    builder->CreateStore(builder->getInt16(0), idx);
+
+    llvm::ArrayType* cell_ty = llvm::ArrayType::get(builder->getInt8Ty(), brain::CELL_SIZE);
+    cell = builder->CreateAlloca(cell_ty, 0, "cell");
 
     // Loop through visiting all of the root's children.
     for (std::shared_ptr<ast> c : t->children) visit(c);
@@ -154,7 +156,8 @@ void code_gen::visit_root(std::shared_ptr<ast>& t) {
 void code_gen::visit_plus(std::shared_ptr<ast>& t) {
 
     // Add 1 to the current cell value, allowing for overflow.
-    cells[idx] = builder->CreateAdd(cells[idx], builder->getInt8(1), "add", false);
+    llvm::Value* new_val = builder->CreateAdd(get_cell(), builder->getInt8(1), "add");
+    set_cell(new_val);
 }
 
 
@@ -166,7 +169,8 @@ void code_gen::visit_plus(std::shared_ptr<ast>& t) {
 void code_gen::visit_minus(std::shared_ptr<ast>& t) {
     
     // Subtract 1 from the current cell value, allowing for overflow.
-    cells[idx] = builder->CreateSub(cells[idx], builder->getInt8(1), "sub", false);
+    llvm::Value* new_val = builder->CreateSub(get_cell(), builder->getInt8(1), "sub");
+    set_cell(new_val);
 }
 
 
@@ -181,7 +185,7 @@ void code_gen::visit_period(std::shared_ptr<ast>& t) {
     llvm::FunctionCallee putchar = mod->getOrInsertFunction("putchar", builder->getInt32Ty(), builder->getInt32Ty());
 
     // Extend the cell to be 32 bits and call putchar.
-    llvm::Value* chr = builder->CreateSExt(cells[idx], builder->getInt32Ty(), "sext");
+    llvm::Value* chr = builder->CreateSExt(get_cell(), builder->getInt32Ty(), "sext");
     llvm::CallInst* call = builder->CreateCall(putchar, chr, "putchar_func");
 }
 
@@ -198,7 +202,8 @@ void code_gen::visit_comma(std::shared_ptr<ast>& t) {
 
     // Call getchar and then truncate to 8 bits.
     llvm::Value* call = builder->CreateCall(getchar, {}, "getchar_func");
-    cells[idx] = builder->CreateTrunc(call, builder->getInt8Ty(), "trunc");
+    llvm::Value* new_val = builder->CreateTrunc(call, builder->getInt8Ty(), "trunc");
+    set_cell(new_val);
 }
 
 
@@ -209,8 +214,12 @@ void code_gen::visit_comma(std::shared_ptr<ast>& t) {
 // ------------------------------------------------------------
 void code_gen::visit_larrow(std::shared_ptr<ast>& t) {
 
-    // Decrement the index.
-    idx--;
+    // Load in the current index and decrement it.
+    llvm::Value* idx_val = builder->CreateLoad(idx, "load");
+    llvm::Value* new_idx = builder->CreateSub(idx_val, builder->getInt16(1), "decr");
+
+    // Store the new index to memory.
+    builder->CreateStore(new_idx, idx);
 }
 
 
@@ -221,8 +230,12 @@ void code_gen::visit_larrow(std::shared_ptr<ast>& t) {
 // ------------------------------------------------------------
 void code_gen::visit_rarrow(std::shared_ptr<ast>& t) {
 
-    // Increment the index.
-    idx++;
+    // Load in the current index and increment it.
+    llvm::Value* idx_val = builder->CreateLoad(idx, "load");
+    llvm::Value* new_idx = builder->CreateAdd(idx_val, builder->getInt16(1), "incr");
+    
+    // Store the new index to memory.
+    builder->CreateStore(new_idx, idx);
 }
 
 
@@ -246,7 +259,7 @@ void code_gen::visit_loop(std::shared_ptr<ast>& t) {
 
     // Move the builder to the condition BB and set the comparison.
     builder->SetInsertPoint(cond);
-    llvm::Value* cmp = builder->CreateICmpNE(cells[idx], builder->getInt8(0), "cmp");
+    llvm::Value* cmp = builder->CreateICmpNE(get_cell(), builder->getInt8(0), "cmp");
     builder->CreateCondBr(cmp, body, join);
 
     // Move the builder and recursively visit the children of the loop.
@@ -259,4 +272,42 @@ void code_gen::visit_loop(std::shared_ptr<ast>& t) {
     // Now we insert the join point and finish the loop code generation.
     main->getBasicBlockList().push_back(join);
     builder->SetInsertPoint(join);
+}
+
+
+// ------------------------------------------------------------
+//  get_cell
+// 
+//  Get and return the llvm::Value for the current cell.
+// ------------------------------------------------------------
+llvm::Value* code_gen::get_cell() {
+
+    // First load the index, then get the ptr for cell[idx].
+    llvm::Value* idx_val = builder->CreateLoad(idx, "load");
+
+    llvm::ArrayType* cell_ty = llvm::ArrayType::get(builder->getInt8Ty(), brain::CELL_SIZE);
+    llvm::Value* gep = builder->CreateGEP(cell_ty, cell, {builder->getInt64(0), idx_val}, "gep");
+
+    return builder->CreateLoad(gep, "cell");
+}
+
+
+// ------------------------------------------------------------
+//  set_cell
+// 
+//  Set the current cell to the given value.
+// ------------------------------------------------------------
+void code_gen::set_cell(llvm::Value* val) {
+    
+    // Make sure that the given value is an i8 value.
+    if (brain::DEBUG) assert(val->getType() == builder->getInt8Ty());
+
+    // Then, load the index and get the ptr.
+    llvm::Value* idx_val = builder->CreateLoad(idx, "load");
+
+    llvm::ArrayType* cell_ty = llvm::ArrayType::get(builder->getInt8Ty(), brain::CELL_SIZE);
+    llvm::Value* gep = builder->CreateGEP(cell_ty, cell, {builder->getInt64(0), idx_val}, "gep");
+
+    // Set the new cell value.
+    builder->CreateStore(val, gep);
 }

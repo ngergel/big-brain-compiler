@@ -21,6 +21,9 @@ namespace brain {
     // Debug flag.
     const bool DEBUG = true;
 
+    // Cell array size. Set to 65536 so 16-bit ints automatically wrap, for bigger array this needs to be implemented.
+    const size_t CELL_SIZE = 65536;
+
     // Define all of the important tokens in a bf program.
     enum token {
         root,

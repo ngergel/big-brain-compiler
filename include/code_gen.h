@@ -10,12 +10,12 @@
 // Include statements.
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/NoFolder.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/ADT/Triple.h"
 
 #include "util.h"
@@ -27,8 +27,7 @@ public:
 
     // File name for the program, and the vector/index consisting of every cell.
     std::string file_name;
-    std::vector<llvm::Value*> cells = std::vector<llvm::Value*>(65536, nullptr);
-    uint16_t idx = 0;
+    llvm::AllocaInst* idx, *cell;
 
     // The LLVM context and module to be referenced.
     std::unique_ptr<llvm::LLVMContext> ctx;
@@ -54,6 +53,10 @@ public:
 
     // Initialize the context, module, and builder.
     void initialize_module();
+
+    // Helper functions for managing the cell array.
+    llvm::Value* get_cell();
+    void set_cell(llvm::Value* val);
 
 private:
 
