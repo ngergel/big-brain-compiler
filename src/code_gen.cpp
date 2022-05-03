@@ -19,7 +19,6 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Verifier.h"
-#include "llvm/IR/NoFolder.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/ADT/Optional.h"
@@ -49,7 +48,7 @@ void code_gen::initialize_module() {
     mod = std::make_unique<llvm::Module>(file_name, *ctx);
 
     // Create a new builder for the module.
-    builder = std::make_unique<llvm::IRBuilder<llvm::NoFolder> >(*ctx);
+    builder = std::make_unique<llvm::IRBuilder<> >(*ctx);
 
     // // Initialize all targets.
     // llvm::InitializeAllTargetInfos();

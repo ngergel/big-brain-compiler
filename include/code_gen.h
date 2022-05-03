@@ -14,7 +14,6 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/NoFolder.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/ADT/Triple.h"
 
@@ -61,5 +60,5 @@ public:
 private:
 
     // The IR builder that this pass uses.
-    std::unique_ptr<llvm::IRBuilder<llvm::NoFolder> > builder;
+    std::unique_ptr<llvm::IRBuilder<> > builder;
 };
