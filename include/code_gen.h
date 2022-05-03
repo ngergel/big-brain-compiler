@@ -34,12 +34,6 @@ public:
     std::unique_ptr<llvm::LLVMContext> ctx;
     std::unique_ptr<llvm::Module> mod;
 
-    // The target triple and target machine specify what the destination arch will be.
-    std::string triple;
-
-    // Function callee's for getchar/putchar, these only need to be defined once.
-    llvm::FunctionCallee getchar, putchar;
-
     // Constructors and deconstructors.
     code_gen() = default;
     code_gen(std::string f): file_name(f) {};
@@ -56,6 +50,7 @@ public:
     void visit_comma(std::shared_ptr<ast>& t);
     void visit_larrow(std::shared_ptr<ast>& t);
     void visit_rarrow(std::shared_ptr<ast>& t);
+    void visit_loop(std::shared_ptr<ast>& t);
 
     // Initialize the context, module, and builder.
     void initialize_module();

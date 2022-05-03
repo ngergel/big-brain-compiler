@@ -51,10 +51,6 @@ void code_gen::initialize_module() {
     // Create a new builder for the module.
     builder = std::make_unique<llvm::IRBuilder<llvm::NoFolder> >(*ctx);
 
-    // Initialize the function callee for getchar and putchar.
-    getchar = mod->getOrInsertFunction("getchar", builder->getInt32Ty());
-    putchar = mod->getOrInsertFunction("putchar", builder->getInt32Ty(), builder->getInt32Ty());
-
     // // Initialize all targets.
     // llvm::InitializeAllTargetInfos();
     // llvm::InitializeAllTargets();
@@ -110,6 +106,8 @@ void code_gen::visit(std::shared_ptr<ast>& t) {
             visit_root(t);
             break;
         case brain::loop:
+            visit_loop(t);
+            break;
         default:
             t = std::make_shared<ast>(brain::nil);
     }
@@ -156,7 +154,7 @@ void code_gen::visit_root(std::shared_ptr<ast>& t) {
 void code_gen::visit_plus(std::shared_ptr<ast>& t) {
 
     // Add 1 to the current cell value, allowing for overflow.
-    cells[idx] = builder->CreateAdd(cells[idx], builder->getInt8(1), "", false);
+    cells[idx] = builder->CreateAdd(cells[idx], builder->getInt8(1), "add", false);
 }
 
 
@@ -168,7 +166,7 @@ void code_gen::visit_plus(std::shared_ptr<ast>& t) {
 void code_gen::visit_minus(std::shared_ptr<ast>& t) {
     
     // Subtract 1 from the current cell value, allowing for overflow.
-    cells[idx] = builder->CreateSub(cells[idx], builder->getInt8(1), "", false);
+    cells[idx] = builder->CreateSub(cells[idx], builder->getInt8(1), "sub", false);
 }
 
 
@@ -179,9 +177,12 @@ void code_gen::visit_minus(std::shared_ptr<ast>& t) {
 // ------------------------------------------------------------
 void code_gen::visit_period(std::shared_ptr<ast>& t) {
 
+    // Initialize the function callee for putchar.
+    llvm::FunctionCallee putchar = mod->getOrInsertFunction("putchar", builder->getInt32Ty(), builder->getInt32Ty());
+
     // Extend the cell to be 32 bits and call putchar.
-    llvm::Value* chr = builder->CreateSExt(cells[idx], builder->getInt32Ty(), "");
-    llvm::CallInst* call = builder->CreateCall(putchar, chr, "");
+    llvm::Value* chr = builder->CreateSExt(cells[idx], builder->getInt32Ty(), "sext");
+    llvm::CallInst* call = builder->CreateCall(putchar, chr, "putchar_func");
 }
 
 
@@ -192,9 +193,12 @@ void code_gen::visit_period(std::shared_ptr<ast>& t) {
 // ------------------------------------------------------------
 void code_gen::visit_comma(std::shared_ptr<ast>& t) {
 
+    // Initialize the function callee for getchar.
+    llvm::FunctionCallee getchar = mod->getOrInsertFunction("getchar", builder->getInt32Ty());
+
     // Call getchar and then truncate to 8 bits.
-    llvm::Value* call = builder->CreateCall(getchar, {}, "");
-    cells[idx] = builder->CreateTrunc(call, builder->getInt8Ty(), "");
+    llvm::Value* call = builder->CreateCall(getchar, {}, "getchar_func");
+    cells[idx] = builder->CreateTrunc(call, builder->getInt8Ty(), "trunc");
 }
 
 
@@ -219,4 +223,15 @@ void code_gen::visit_rarrow(std::shared_ptr<ast>& t) {
 
     // Increment the index.
     idx++;
+}
+
+
+// ------------------------------------------------------------
+//  visit_loop
+// 
+//  Visit a loop node, and recursively visit it's children.
+// ------------------------------------------------------------
+void code_gen::visit_loop(std::shared_ptr<ast>& t) {
+
+    
 }
