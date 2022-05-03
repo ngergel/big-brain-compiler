@@ -10,8 +10,11 @@
 #include <sstream>
 #include <string>
 
+#include "llvm/Pass.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/PassManager.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include "util.h"
@@ -42,6 +45,19 @@ int main(int argc, char** argv) {
     code_gen gen_pass(std::string{argv[1]});
     gen_pass.initialize_module();
     gen_pass.visit(tree);
+
+    // // Initialize the pass manager.
+    // auto fpm = std::make_unique<llvm::FunctionPassManager>(gen_pass.mod->get());
+
+    // // Add our passes.
+    // fpm->add(llvm::createInstructionCombiningPass());
+    // fpm->add(llvm::createReassociatePass());
+    // fpm->add(llvm::createGVNPass());
+    // fpm->add(llvm::createCFGSimplificationPass());
+
+    // // Do initialization and then run the pass manager.
+    // fpm->doInitialization();
+    // fpm->run(gen_pass.mod->getFunction("main"));
 
     gen_pass.mod->print(llvm::errs(), nullptr);
 
