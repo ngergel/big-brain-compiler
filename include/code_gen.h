@@ -51,7 +51,7 @@ public:
     void visit_loop(std::shared_ptr<ast>& t);
 
     // Initialize the context, module, and builder.
-    void initialize_module();
+    bool initialize_module();
 
     // Helper functions for managing the cell array.
     llvm::Value* get_cell();

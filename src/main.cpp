@@ -16,7 +16,6 @@
 #include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
-// #include "llvm/Passes/OptimizationLevel.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/TargetSelect.h"
@@ -48,8 +47,10 @@ int main(int argc, char** argv) {
 
     // Initialize the code gen pass and generate the LLVM IR.
     code_gen gen_pass(std::string{argv[1]});
-    gen_pass.initialize_module();
-    gen_pass.visit(tree);
+    bool result = gen_pass.initialize_module();
+    
+    if (result) gen_pass.visit(tree);
+    else return 1;
 
     // Initialize the pass manager.
     llvm::LoopAnalysisManager lam;

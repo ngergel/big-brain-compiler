@@ -42,7 +42,7 @@
 // 
 //  Initialize the LLVM context, module, and builder.
 // ------------------------------------------------------------
-void code_gen::initialize_module() {
+bool code_gen::initialize_module() {
     
     // Open a new context and module.
     ctx = std::make_unique<llvm::LLVMContext>();
@@ -58,17 +58,27 @@ void code_gen::initialize_module() {
     llvm::InitializeAllAsmParsers();
     llvm::InitializeAllAsmPrinters();
 
-    // // Set the target triple and target machine.
-    // std::string cpu = "generic", features = "", err;
-    // llvm::TargetOptions opt;
-    // auto rm = llvm::Optional<llvm::Reloc::Model>();
+    // Set the target triple and target machine.
+    std::string err;
+    auto triple = llvm::sys::getDefaultTargetTriple();
+    auto target = llvm::TargetRegistry::lookupTarget(triple, err);
 
-    // triple = llvm::sys::getDefaultTargetTriple();
-    // auto target = llvm::TargetRegistry::lookupTarget(triple, err);
-    // // auto target_machine = target->createTargetMachine(mod->getTargetTriple(), cpu, features, opt, rm);
+    // Unable to get the target.
+    if (!target) {
+        llvm::errs() << err;
+        return false;
+    }
 
+    llvm::TargetOptions opt;
+    auto rm = llvm::Optional<llvm::Reloc::Model>();
 
-    // if (!target) llvm::errs() << err;
+    auto machine = target->createTargetMachine(triple, llvm::sys::getHostCPUName(), "", opt, rm);
+
+    // Set the layout and target triple.
+    mod->setDataLayout(machine->createDataLayout());
+    mod->setTargetTriple(triple);
+
+    return true;
 }
 
 
