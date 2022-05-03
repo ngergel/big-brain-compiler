@@ -233,5 +233,30 @@ void code_gen::visit_rarrow(std::shared_ptr<ast>& t) {
 // ------------------------------------------------------------
 void code_gen::visit_loop(std::shared_ptr<ast>& t) {
 
-    
+    // First retrieve the function.
+    llvm::Function* main = builder->GetInsertBlock()->getParent();
+
+    // Declare the condition, body, loop and join point basic blocks.
+    llvm::BasicBlock* cond = llvm::BasicBlock::Create(*ctx, "cond", main);
+    llvm::BasicBlock* body = llvm::BasicBlock::Create(*ctx, "body", main);
+    llvm::BasicBlock* join = llvm::BasicBlock::Create(*ctx, "join");
+
+    // Add in a branch from the current BB to the condition BB for fall-through.
+    builder->CreateBr(cond);
+
+    // Move the builder to the condition BB and set the comparison.
+    builder->SetInsertPoint(cond);
+    llvm::Value* cmp = builder->CreateICmpNE(cells[idx], builder->getInt8(0), "cmp");
+    builder->CreateCondBr(cmp, body, join);
+
+    // Move the builder and recursively visit the children of the loop.
+    builder->SetInsertPoint(body);
+    for (std::shared_ptr<ast> c : t->children) visit(c);
+
+    // Once we are done, we fall through to the cond BB.
+    builder->CreateBr(cond);
+
+    // Now we insert the join point and finish the loop code generation.
+    main->getBasicBlockList().push_back(join);
+    builder->SetInsertPoint(join);
 }
