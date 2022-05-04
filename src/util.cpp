@@ -129,5 +129,5 @@ brain::token brain::get_token(char c) {
 void brain::print_usage() {
     
     // Just print out the correct usage.
-    std::cerr << "\x1B[33mUsage:\033[0m brainc [-h] <input file> [-o <output file>]\n";
+    std::cerr << "\x1B[33mUsage:\033[0m brainc [-h] [-O<n>] <input file> [-o <output file>]\n";
 }

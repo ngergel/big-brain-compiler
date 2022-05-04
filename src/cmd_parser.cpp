@@ -43,8 +43,10 @@ std::string cmd_parser::get_option(const std::string& opt) {
     // Retrieve an iterator to the given option using std::find.
     auto it = std::find(args.begin(), args.end(), opt);
 
-    if (it == args.end() || ++it == args.end()) return "";
-    return *it;
+    if (it == args.end()) return "";
+    if (opt_flags.count(*it) || opt_optimization.count(*it)) return *it;
+    
+    return ++it != args.end() ? *it : "";
 }
 
 
