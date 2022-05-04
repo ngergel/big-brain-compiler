@@ -13,6 +13,8 @@
 #include <filesystem>
 #include <unordered_set>
 
+#include "llvm/Passes/PassBuilder.h"
+
 #include "util.h"
 
 
@@ -34,8 +36,9 @@ public:
     std::string get_option(const std::string& opt);
     bool option_argument();
 
-    // Get specifically the input bf file.
+    // Get specifically the input bf file or optimization level.
     std::filesystem::path get_input_file();
+    llvm::PassBuilder::OptimizationLevel get_opt_level();
 
     // Check input file integrity.
     bool check_input_file();
@@ -46,7 +49,7 @@ private:
     std::vector<std::string> args;
 
     // Collection of valid option parameters, and flags.
-    const std::unordered_set<std::string> opt_parameters{"-o"};
-    const std::unordered_set<std::string> opt_flags{"-h"};
-    const std::unordered_set<std::string> opt_optimization{"-O0", "-O1", "-O2", "-O3"};
+    const std::unordered_set<std::string> arg_parameters{"-o"};
+    const std::unordered_set<std::string> arg_flags{"-h"};
+    const std::unordered_set<std::string> arg_optimization{"-O0", "-O1", "-O2", "-O3"};
 };

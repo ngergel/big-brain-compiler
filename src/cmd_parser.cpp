@@ -44,7 +44,7 @@ std::string cmd_parser::get_option(const std::string& opt) {
     auto it = std::find(args.begin(), args.end(), opt);
 
     if (it == args.end()) return "";
-    if (opt_flags.count(*it) || opt_optimization.count(*it)) return *it;
+    if (arg_flags.count(*it) || arg_optimization.count(*it)) return *it;
     
     return ++it != args.end() ? *it : "";
 }
@@ -61,7 +61,7 @@ std::filesystem::path cmd_parser::get_input_file() {
     // We ignore arguments that have an option parameter preceeding them.
     for (size_t i = 0; i < args.size(); i++) {
         std::filesystem::path file = args[i];
-        if (file.extension() == ".bf" && (i == 0 || !opt_parameters.count(args[i - 1]))) return file;
+        if (file.extension() == ".bf" && (i == 0 || !arg_parameters.count(args[i - 1]))) return file;
     }
 
     // Otherwise, return an empty string.
@@ -98,4 +98,34 @@ bool cmd_parser::check_input_file() {
     }
 
     return true;
+}
+
+
+// ------------------------------------------------------------
+//  get_opt_level
+// 
+//  Get the optimization level, and return the LLVM token for
+//  simplicity. Defaults to O2.
+// ------------------------------------------------------------
+llvm::PassBuilder::OptimizationLevel cmd_parser::get_opt_level() {
+
+    // Check if any optimization levels are given.
+    unsigned opt = 2;
+    for (std::string o : arg_optimization) {
+        if (option_exists(o)) opt = std::stoi(o.substr(2, 1));
+    }
+
+    // Return the appropriate LLVM token for it.
+    switch (opt) {
+        case 0:
+            return llvm::PassBuilder::OptimizationLevel::O0;
+        case 1:
+            return llvm::PassBuilder::OptimizationLevel::O1;
+        case 2:
+            return llvm::PassBuilder::OptimizationLevel::O2;
+        case 3:
+            return llvm::PassBuilder::OptimizationLevel::O3;
+        default:
+            return llvm::PassBuilder::OptimizationLevel::O2;
+    }
 }

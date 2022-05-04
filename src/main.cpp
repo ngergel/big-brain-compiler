@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
     pb.crossRegisterProxies(lam, fam, cgam, mam);
 
     // Optimize the IR.
-    llvm::FunctionPassManager fpm = pb.buildFunctionSimplificationPipeline(llvm::PassBuilder::OptimizationLevel::O2,
+    llvm::FunctionPassManager fpm = pb.buildFunctionSimplificationPipeline(input.get_opt_level(),
                                                                            llvm::PassBuilder::ThinLTOPhase::None);
 
     fpm.run(*gen_pass.mod->getFunction("main"), fam);
