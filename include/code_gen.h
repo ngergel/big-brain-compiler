@@ -24,9 +24,8 @@
 class code_gen {
 public:
 
-    // File name for the program, and the vector/index consisting of every cell.
-    std::string file_name;
-    llvm::AllocaInst* idx, *cell;
+    // Program name.
+    std::string prog_name;
 
     // The LLVM context and module to be referenced.
     std::unique_ptr<llvm::LLVMContext> ctx;
@@ -34,13 +33,25 @@ public:
 
     // Constructors and deconstructors.
     code_gen() = default;
-    code_gen(std::string f): file_name(f) {};
+    code_gen(std::string f): prog_name(f) {};
 
     ~code_gen() = default;
 
-    // Visitor functions for walking the tree and generating LLVM IR.
+    // Main visitor function for walking the tree and generating LLVM IR.
     void visit(std::shared_ptr<ast>& t);
 
+    // Initialize the context, module, and builder.
+    bool initialize_module();
+
+private:
+
+    // The IR builder that this pass uses.
+    std::unique_ptr<llvm::IRBuilder<> > builder;
+
+    // Alloca instructions for the head and tape respectively.
+    llvm::AllocaInst* idx, *cell;
+
+    // All the token-specific visitor functions.
     void visit_root(std::shared_ptr<ast>& t);
     void visit_plus(std::shared_ptr<ast>& t);
     void visit_minus(std::shared_ptr<ast>& t);
@@ -50,15 +61,7 @@ public:
     void visit_rarrow(std::shared_ptr<ast>& t);
     void visit_loop(std::shared_ptr<ast>& t);
 
-    // Initialize the context, module, and builder.
-    bool initialize_module();
-
     // Helper functions for managing the cell array.
     llvm::Value* get_cell();
     void set_cell(llvm::Value* val);
-
-private:
-
-    // The IR builder that this pass uses.
-    std::unique_ptr<llvm::IRBuilder<> > builder;
 };

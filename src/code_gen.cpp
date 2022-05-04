@@ -46,7 +46,7 @@ bool code_gen::initialize_module() {
     
     // Open a new context and module.
     ctx = std::make_unique<llvm::LLVMContext>();
-    mod = std::make_unique<llvm::Module>(file_name, *ctx);
+    mod = std::make_unique<llvm::Module>(prog_name, *ctx);
 
     // Create a new builder for the module.
     builder = std::make_unique<llvm::IRBuilder<> >(*ctx);

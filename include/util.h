@@ -2,6 +2,7 @@
 //  util.h
 //  
 //  Tokens, constants and project wide settings.
+//  General utility functions.
 // ------------------------------------------------------------
 
 #pragma once
@@ -21,7 +22,8 @@ namespace brain {
     // Debug flag.
     const bool DEBUG = true;
 
-    // Cell array size. Set to 65536 so 16-bit ints automatically wrap, for bigger array this needs to be implemented.
+    // Cell array size. Set to 65536 so 16-bit ints automatically wrap,
+    // for bigger a array this wrapping needs to be implemented.
     const size_t CELL_SIZE = 65536;
 
     // Define all of the important tokens in a bf program.
@@ -48,4 +50,8 @@ namespace brain {
 
     // Print out a tree in it's entirety, showing the tree structure.
     void print_ast(std::shared_ptr<ast>& t);
+
+    // Print out the commandline usage, or help message.
+    void print_usage();
+    void print_help();
 }

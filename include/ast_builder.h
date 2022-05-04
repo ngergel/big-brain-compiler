@@ -26,9 +26,16 @@ public:
 
     ~ast_builder() = default;
 
-    // Visitor functions for each type of token.
+    // Main visitor function.
     void visit(std::shared_ptr<ast>& t);
 
+private:
+
+    // Copy of the program to be referenced when constructing the AST.
+    std::string prog;
+
+    // Visitor functions for each type of token.
+    // Mainly, is it a single token or does it have children.
     void visit_multi(std::shared_ptr<ast>& t);
     void visit_single(std::shared_ptr<ast>& t);
 
@@ -37,9 +44,4 @@ public:
 
     // Helper function for incrementing the index, respecting char and line position.
     void incr_idx(size_t& idx, size_t& line, size_t& chr);
-
-private:
-
-    // Copy of the program to be referenced when constructing the AST.
-    std::string prog;
 };

@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <filesystem>
 
 #include "llvm/Pass.h"
 #include "llvm/IR/LLVMContext.h"
@@ -24,19 +25,22 @@
 #include "util.h"
 #include "ast_builder.h"
 #include "code_gen.h"
+#include "cmd_parser.h"
 
 
 int main(int argc, char** argv) {
     
-    // Make sure there is the required number of command argments.
-    if (argc < 3) {
-        std::cout << "Missing required argument.\n"
-                  << "Required arguments: <input file path> <output file path>\n";
-        return 1;
+    // Initialize the command argument parser.
+    cmd_parser input(argc, argv);
+
+    // Make sure at least the input file is given, and that it is a valid file.
+    if (!input.check_input_file()) {
+        brain::print_usage();
+        return 2;
     }
 
     // Read in the file.
-    std::ifstream ifs(argv[1]);
+    std::ifstream ifs(input.get_input_file());
     std::stringstream bf_prog;
     bf_prog << ifs.rdbuf();
 
@@ -46,13 +50,13 @@ int main(int argc, char** argv) {
     ast_pass.visit(tree);
 
     // Initialize the code gen pass and generate the LLVM IR.
-    code_gen gen_pass(std::string{argv[1]});
+    code_gen gen_pass(input.get_input_file());
     bool result = gen_pass.initialize_module();
     
     if (result) gen_pass.visit(tree);
     else return 1;
 
-    // Initialize the pass manager.
+    // Initialize the pass managers.
     llvm::LoopAnalysisManager lam;
     llvm::FunctionAnalysisManager fam;
     llvm::CGSCCAnalysisManager cgam;
