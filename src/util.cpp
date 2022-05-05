@@ -122,12 +122,18 @@ brain::token brain::get_token(char c) {
 
 
 // ------------------------------------------------------------
-//  print_usage
+//  get_err
 // 
-//  Prints out the correct usage of the brainc command.
+//  Get the formatted error message from a base message.
 // ------------------------------------------------------------
-void brain::print_usage() {
+std::string brain::get_err(std::string msg, const std::shared_ptr<ast> src) {
     
-    // Just print out the correct usage.
-    std::cerr << "\x1B[33mUsage:\033[0m brainc [-h] [-O<n>] <input file> [-o <output file>]\n";
+    // Start with just the error word first.
+    std::string err = "\x1B[31mError";
+
+    // Add the line/char number if applicable.
+    if (src != nullptr) err += "[" + std::to_string(src->line + 1) + ":" + std::to_string(src->chr + 1) + "]";
+
+    // Add the rest of the message, and return.
+    return err + ":\033[0m " + msg + "\n";
 }

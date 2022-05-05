@@ -20,6 +20,12 @@
 class ast_builder {
 public:
 
+    // Error code. If this is non-zero, something went wrong when building the AST.
+    // 0 => No error.
+    // 1 => Missing closing bracket.
+    // 2 => Missing opening bracket, when there is an unmatched closing bracket.
+    unsigned ec = 0;
+
     // Constructors and deconstructors.
     ast_builder() = default;
     ast_builder(std::string p): prog(p) {};
@@ -44,4 +50,7 @@ private:
 
     // Helper function for incrementing the index, respecting char and line position.
     void incr_idx(size_t& idx, size_t& line, size_t& chr);
+
+    // Check the syntax of the entire program, and set the error code if there is an issue.
+    bool check_syntax();
 };

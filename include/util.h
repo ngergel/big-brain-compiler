@@ -26,6 +26,9 @@ namespace brain {
     // for bigger a array this wrapping needs to be implemented.
     const size_t CELL_SIZE = 65536;
 
+    // Usage string.
+    const std::string USAGE = "\x1B[33mUsage:\033[0m brainc [-h] [-O<n>] <input file> [-o <output file>]\n";
+
     // Define all of the important tokens in a bf program.
     enum token {
         root,
@@ -51,7 +54,6 @@ namespace brain {
     // Print out a tree in it's entirety, showing the tree structure.
     void print_ast(std::shared_ptr<ast>& t);
 
-    // Print out the commandline usage, or help message.
-    void print_usage();
-    void print_help();
+    // Print out a given error message.
+    std::string get_err(std::string msg, const std::shared_ptr<ast> src = nullptr);
 }

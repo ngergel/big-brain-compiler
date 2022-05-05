@@ -22,6 +22,9 @@ void ast_builder::visit(std::shared_ptr<ast>& t) {
     // Make sure we aren't visiting a nil token in the AST.
     if (brain::DEBUG) assert(t->token != brain::nil);
 
+    // If the error code was set, just exit early.
+    if (ec) return;
+
     // Reduce into each of the possible cases.
     switch (t->token) {
         case brain::plus:
@@ -49,6 +52,11 @@ void ast_builder::visit(std::shared_ptr<ast>& t) {
 //  In bf, this only applies to the root or loop nodes.
 // ------------------------------------------------------------
 void ast_builder::visit_multi(std::shared_ptr<ast>& t) {
+
+    // Once at the beginning, do a syntax check.
+    if (t->token == brain::root && !check_syntax()) return;
+
+    std::cerr << "hi\n";
 
     // Get the end of the program that we will look at.
     size_t end = t->token == brain::root ? prog.length() : loop_lookahead(t->idx);
@@ -119,6 +127,42 @@ size_t ast_builder::loop_lookahead(size_t start) {
 //  Does the incrementing inplace.
 // ------------------------------------------------------------
 void ast_builder::incr_idx(size_t& idx, size_t& line, size_t& chr) {
-    idx++, chr++;
     if (prog[idx] == '\n') idx++, line++, chr = 0;
+    else idx++, chr++;
+}
+
+
+// ------------------------------------------------------------
+//  check_syntax
+// 
+//  Check the program syntax. The only possible syntax error
+//  are unbalanced brackets.
+// ------------------------------------------------------------
+bool ast_builder::check_syntax() {
+
+    std::cout << "doing syntax check\n";
+
+    // Initialize a counter and loop through the program.
+    int cnt = 0;
+    size_t line = 0, chr = 0, first_line = 0, first_chr = 0;
+    for (size_t i = 0; i < prog.length() && !ec && cnt >= 0; incr_idx(i, line, chr)) {
+        if (prog[i] == '[') cnt++;
+        else if (prog[i] == ']') cnt--;
+
+        // We want the line/char of the first '[' for missing closing bracket errors.
+        if (prog[i] == '[' && cnt == 1) first_line = line, first_chr = chr;
+    }
+
+    // Print out the appropriate error message, or return true.
+    if (cnt > 0 && (ec = 1)) {
+        std::cerr << brain::get_err("'[' is missing it's closing ']'.",
+                                    std::make_shared<ast>(brain::nil, nullptr, first_line, first_chr, 0));
+        return false;
+    } else if (cnt < 0 && (ec = 2)) {
+        std::cerr << brain::get_err("']' is missing it's opening '['.",
+                                    std::make_shared<ast>(brain::nil, nullptr, line, chr - 1, 0));
+        return false;
+    }
+
+    return true;
 }

@@ -81,19 +81,16 @@ bool cmd_parser::check_input_file() {
 
     // Make sure the input file is actually given.
     if (get_input_file() == "") {
-        std::cerr << "\x1B[31mError:\033[0m Missing input file. Input files are expected to have the '.bf' extension.\n";
+        std::cerr << brain::get_err("Missing input file. Input files are expected to have the '.bf' extension.");
         return false;
     }
 
-    // Make sure it exists.
+    // Make sure it exists, and that it is a regular file.
     if (!std::filesystem::exists(s)) {
-        std::cerr << "\x1B[31mError:\033[0m Input file does not exist.\n";
+        std::cerr << brain::get_err("Input file does not exist.");
         return false;
-    }
-
-    // Make sure it is a regular file.
-    if (!std::filesystem::is_regular_file(s)) {
-        std::cerr << "\x1B[31mError:\033[0m Input is not a regular file.\n";
+    } else if (!std::filesystem::is_regular_file(s)) {
+        std::cerr << brain::get_err("Input is not a regular file.");
         return false;
     }
 
