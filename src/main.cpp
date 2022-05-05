@@ -49,14 +49,8 @@ int main(int argc, char** argv) {
     std::shared_ptr<ast> tree = std::make_shared<ast>(brain::root);
     ast_pass.visit(tree);
 
-    std::cerr << "reaches here, ec: " << ast_pass.ec << "\n";
-
     // Catch the only possible syntax error in bf, unbalanced brackets!
     if (ast_pass.ec) return 1;
-
-    std::cerr << "reaches here, ec: " << ast_pass.ec << "\n";
-
-    return 0;
 
     // Initialize the code gen pass and generate the LLVM IR.
     code_gen gen_pass(input.get_input_file());
