@@ -122,11 +122,11 @@ brain::token brain::get_token(char c) {
 
 
 // ------------------------------------------------------------
-//  get_err
+//  err_msg
 // 
 //  Get the formatted error message from a base message.
 // ------------------------------------------------------------
-std::string brain::get_err(std::string msg, const std::shared_ptr<ast> src) {
+std::string brain::err_msg(std::string msg, const std::shared_ptr<ast> src) {
     
     // Start with just the error word first.
     std::string err = "\x1B[31mError";

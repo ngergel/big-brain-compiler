@@ -10,19 +10,26 @@
 // Include statements.
 #include <memory>
 #include <string>
+#include <system_error>
 
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/ADT/Triple.h"
+#include "llvm/Target/TargetMachine.h"
 
 #include "util.h"
 #include "ast.h"
+#include "bf_error.h"
 
 
 class code_gen {
 public:
+
+    // Error code for the code gen pass.
+    std::error_code ec = brain_errc::no_err;
+    std::string llvm_err;
 
     // Program name.
     std::string prog_name;
@@ -30,6 +37,7 @@ public:
     // The LLVM context and module to be referenced.
     std::unique_ptr<llvm::LLVMContext> ctx;
     std::unique_ptr<llvm::Module> mod;
+    std::unique_ptr<llvm::TargetMachine> machine;
 
     // Constructors and deconstructors.
     code_gen() = default;

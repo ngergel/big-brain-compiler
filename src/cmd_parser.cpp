@@ -16,6 +16,7 @@
 
 #include "cmd_parser.h"
 #include "util.h"
+#include "bf_error.h"
 
 
 // ------------------------------------------------------------
@@ -55,13 +56,17 @@ std::string cmd_parser::get_option(const std::string& opt) {
 //
 //  Get the input file file.
 // ------------------------------------------------------------
-std::filesystem::path cmd_parser::get_input_file() {
+std::string cmd_parser::get_input_file() {
 
     // Loop through every argument, looking for the bf extension.
     // We ignore arguments that have an option parameter preceeding them.
-    for (size_t i = 0; i < args.size(); i++) {
-        std::filesystem::path file = args[i];
-        if (file.extension() == ".bf" && (i == 0 || !arg_parameters.count(args[i - 1]))) return file;
+    for (size_t i = 1; i < args.size(); i++) {
+        if (!arg_flags.count(args[i])
+            && !arg_optimization.count(args[i])
+            && !arg_parameters.count(args[i - 1])) {
+            
+            return args[i];
+        }
     }
 
     // Otherwise, return an empty string.
@@ -81,20 +86,12 @@ bool cmd_parser::check_input_file() {
 
     // Make sure the input file is actually given.
     if (get_input_file() == "") {
-        std::cerr << brain::get_err("Missing input file. Input files are expected to have the '.bf' extension.");
-        return false;
+        ec = brain_errc::cmd_missing_input;
+    } else if (!std::filesystem::exists(s) || !std::filesystem::is_regular_file(s)) {
+        ec = brain_errc::cmd_invalid_input;
     }
 
-    // Make sure it exists, and that it is a regular file.
-    if (!std::filesystem::exists(s)) {
-        std::cerr << brain::get_err("Input file does not exist.");
-        return false;
-    } else if (!std::filesystem::is_regular_file(s)) {
-        std::cerr << brain::get_err("Input is not a regular file.");
-        return false;
-    }
-
-    return true;
+    return ec == brain_errc::no_err;
 }
 
 

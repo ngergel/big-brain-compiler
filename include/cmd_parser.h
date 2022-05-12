@@ -10,16 +10,20 @@
 // Include statements.
 #include <vector>
 #include <string>
-#include <filesystem>
 #include <unordered_set>
+#include <system_error>
 
 #include "llvm/Passes/PassBuilder.h"
 
 #include "util.h"
+#include "bf_error.h"
 
 
 class cmd_parser {
 public:
+
+    // Error code for command parsing.
+    std::error_code ec = brain_errc::no_err;
 
     // Constructor and deconstructor.
     cmd_parser() = default;
@@ -34,10 +38,9 @@ public:
     // Functions for checking if an option exists, or returning it's associated value.
     bool option_exists(const std::string& opt);
     std::string get_option(const std::string& opt);
-    bool option_argument();
 
     // Get specifically the input bf file or optimization level.
-    std::filesystem::path get_input_file();
+    std::string get_input_file();
     llvm::PassBuilder::OptimizationLevel get_opt_level();
 
     // Check input file integrity.

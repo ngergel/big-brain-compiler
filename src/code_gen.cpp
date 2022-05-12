@@ -35,6 +35,7 @@
 
 #include "code_gen.h"
 #include "ast.h"
+#include "bf_error.h"
 
 
 // ------------------------------------------------------------
@@ -59,20 +60,20 @@ bool code_gen::initialize_module() {
     llvm::InitializeAllAsmPrinters();
 
     // Set the target triple and target machine.
-    std::string err;
     auto triple = llvm::sys::getDefaultTargetTriple();
-    auto target = llvm::TargetRegistry::lookupTarget(triple, err);
+    auto target = llvm::TargetRegistry::lookupTarget(triple, llvm_err);
 
     // Unable to get the target.
     if (!target) {
-        llvm::errs() << err;
+        ec = brain_errc::gen_bad_init;
         return false;
     }
 
     llvm::TargetOptions opt;
     auto rm = llvm::Optional<llvm::Reloc::Model>();
 
-    auto machine = target->createTargetMachine(triple, llvm::sys::getHostCPUName(), "", opt, rm);
+    // Set the machine.
+    machine = std::unique_ptr<llvm::TargetMachine>(target->createTargetMachine(triple, llvm::sys::getHostCPUName(), "", {}, llvm::Reloc::PIC_));
 
     // Set the layout and target triple.
     mod->setDataLayout(machine->createDataLayout());
@@ -91,6 +92,9 @@ void code_gen::visit(std::shared_ptr<ast>& t) {
 
     // Make sure we aren't visiting a nil token in the AST.
     if (brain::DEBUG) assert(t->token != brain::nil);
+
+    // Don't proceed if we've already hit an error.
+    if (ec != brain_errc::no_err) return;
 
     // Reduce into each of the possible cases.
     switch (t->token) {
@@ -155,7 +159,7 @@ void code_gen::visit_root(std::shared_ptr<ast>& t) {
 
     // Create the return statement and validate the generated code.
     builder->CreateRet(builder->getInt32(0));
-    llvm::verifyFunction(*main);
+    llvm::verifyFunction(*main, &llvm::errs());
 }
 
 

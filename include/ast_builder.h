@@ -12,19 +12,20 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <system_error>
 
 #include "util.h"
 #include "ast.h"
+#include "bf_error.h"
 
 
 class ast_builder {
 public:
 
-    // Error code. If this is non-zero, something went wrong when building the AST.
-    // 0 => No error.
-    // 1 => Missing closing bracket.
-    // 2 => Missing opening bracket, when there is an unmatched closing bracket.
-    unsigned ec = 0;
+    // Error code for the AST generation.
+    // If something goes wrong, the AST builder will silently fail and set this instead.
+    std::error_code ec = brain_errc::no_err;
+    std::shared_ptr<ast> err_node;
 
     // Constructors and deconstructors.
     ast_builder() = default;

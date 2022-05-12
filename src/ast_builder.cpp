@@ -10,6 +10,7 @@
 
 #include "util.h"
 #include "ast_builder.h"
+#include "bf_error.h"
 
 
 // ------------------------------------------------------------
@@ -23,7 +24,7 @@ void ast_builder::visit(std::shared_ptr<ast>& t) {
     if (brain::DEBUG) assert(t->token != brain::nil);
 
     // If the error code was set, just exit early.
-    if (ec) return;
+    if (ec != brain_errc::no_err) return;
 
     // Reduce into each of the possible cases.
     switch (t->token) {
@@ -138,10 +139,13 @@ void ast_builder::incr_idx(size_t& idx, size_t& line, size_t& chr) {
 // ------------------------------------------------------------
 bool ast_builder::check_syntax() {
 
+    // Exit if we already have an error.
+    if (ec != brain_errc::no_err) return false;
+
     // Initialize a counter and loop through the program.
     int cnt = 0;
     size_t line = 0, chr = 0, first_line = 0, first_chr = 0;
-    for (size_t i = 0; i < prog.length() && !ec; incr_idx(i, line, chr)) {
+    for (size_t i = 0; i < prog.length(); incr_idx(i, line, chr)) {
         if (prog[i] == '[') cnt++;
         else if (prog[i] == ']') cnt--;
 
@@ -151,15 +155,13 @@ bool ast_builder::check_syntax() {
     }
 
     // Print out the appropriate error message, or return true.
-    if (cnt > 0 && (ec = 1)) {
-        std::cerr << brain::get_err("'[' is missing it's closing ']'.",
-                                    std::make_shared<ast>(brain::nil, nullptr, first_line, first_chr, 0));
-        return false;
-    } else if (cnt < 0 && (ec = 2)) {
-        std::cerr << brain::get_err("']' is missing it's opening '['.",
-                                    std::make_shared<ast>(brain::nil, nullptr, line, chr, 0));
-        return false;
+    if (cnt > 0) {
+        ec = brain_errc::ast_lbracket;
+        err_node = std::make_shared<ast>(brain::nil, nullptr, first_line, first_chr, 0);
+    } else if (cnt < 0) {
+        ec = brain_errc::ast_rbracket;
+        err_node = std::make_shared<ast>(brain::nil, nullptr, line, chr, 0);
     }
 
-    return true;
+    return ec == brain_errc::no_err;
 }

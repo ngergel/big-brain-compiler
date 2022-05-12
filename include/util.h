@@ -55,5 +55,5 @@ namespace brain {
     void print_ast(std::shared_ptr<ast>& t);
 
     // Print out a given error message.
-    std::string get_err(std::string msg, const std::shared_ptr<ast> src = nullptr);
+    std::string err_msg(std::string msg, const std::shared_ptr<ast> src = nullptr);
 }
