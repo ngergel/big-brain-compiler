@@ -135,7 +135,7 @@ void code_gen::visit(std::shared_ptr<ast>& t) {
 // ------------------------------------------------------------
 void code_gen::visit_root(std::shared_ptr<ast>& t) {
 
-    // Make sure our token is a plus.
+    // Make sure our token is the root.
     if (brain::DEBUG) assert(t->token == brain::root);
 
     // Initialize the main function, and its return value.

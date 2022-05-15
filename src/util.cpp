@@ -38,26 +38,21 @@ bool brain::valid_token(char c) {
 
 
 // ------------------------------------------------------------
-//  print_ast
+//  print_prog
 // 
-//  Prints out an AST, mainly for debugging purposes.
+//  Prints out the program, mainly for debugging purposes.
 // ------------------------------------------------------------
-void brain::print_ast(std::shared_ptr<ast>& t) {
+void brain::print_prog(std::shared_ptr<ast>& t) {
     
     // Print this node's information.
-    std::cout << "Token: " << token_name(t->token) << "\n"
-              << "Number of children: " << t->children.size() << "\n"
-              << "Line and char position: " << t->line << ", " << t->chr << "\n";
-    if (t->parent) std::cout << "Parent token: " << token_name(t->parent->token) << "\n";
+    if (t->token == brain::loop) std::cout << "[";
+    else if (t->token != brain::root) std::cout << token_name(t->token);
 
     // Print out the children nodes.
-    std::cout << "Children:\n";
-    for (auto child : t->children) std::cout << token_name(child->token) << " ";
-    std::cout << "\n\n";
+    for (auto child : t->children) print_ast(child);
 
-    for (auto child : t->children) {
-        if (child->token == brain::loop) print_ast(child);
-    }
+    if (t->token == brain::loop) std::cout << "]";
+    else if (t->token == brain::root) std::cout << "\n";
 }
 
 

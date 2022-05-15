@@ -51,8 +51,8 @@ namespace brain {
     // Given a character, return the appropriate token.
     token get_token(char c);
 
-    // Print out a tree in it's entirety, showing the tree structure.
-    void print_ast(std::shared_ptr<ast>& t);
+    // Print out the bf program, for debugging purposes.
+    void print_prog(std::shared_ptr<ast>& t);
 
     // Print out a given error message.
     std::string err_msg(std::string msg, const std::shared_ptr<ast> src = nullptr);

@@ -54,6 +54,9 @@ void ast_builder::visit(std::shared_ptr<ast>& t) {
 // ------------------------------------------------------------
 void ast_builder::visit_multi(std::shared_ptr<ast>& t) {
 
+    // Make sure we are either visiting the root, or a loop node.
+    if (brain::DEBUG) assert(t->token == brain::root || t->token == brain::loop);
+
     // Once at the beginning, do a syntax check.
     if (t->token == brain::root && !check_syntax()) return;
 
