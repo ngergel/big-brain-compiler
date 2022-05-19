@@ -36,11 +36,11 @@ public:
     ~lowering() = default;
 
     // Optimize the LLVM IR to a given optimization level.
-    void optimize(unsigned opt_level);
+    void optimize(size_t opt_level);
 
     // Compile and link respectively. Linking just involkes clang.
     void compile(std::string output_file, bool target_asm = false);
-    void link(std::string obj_file, std::string exe_file);
+    void link(std::string obj_file, std::string exe_file, size_t lto_level = 2);
 private:
 
 };

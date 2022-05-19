@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
     else exe_file = std::filesystem::path(input.get_input_file()).stem();
 
     // Link the object file.
-    lower_pass.link(obj_file, exe_file);
+    lower_pass.link(obj_file, exe_file, input.get_opt_level());
 
     // Since we lowered all the way to an executible, we now want to delete the object file.
     std::filesystem::remove(obj_file);

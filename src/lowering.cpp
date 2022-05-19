@@ -32,7 +32,7 @@
 // 
 //  Optimize the LLVM IR.
 // ------------------------------------------------------------
-void lowering::optimize(unsigned opt_level) {
+void lowering::optimize(size_t opt_level) {
 
     // Initialize the pass managers.
     llvm::LoopAnalysisManager lam;
@@ -102,7 +102,7 @@ void lowering::compile(std::string output_file, bool target_asm) {
 // 
 //  Link the object file and produce the final executable.
 // ------------------------------------------------------------
-void lowering::link(std::string obj_file, std::string exe_file) {
+void lowering::link(std::string obj_file, std::string exe_file, size_t lto_level) {
 
     // Find clang to link the program.
     auto clang = llvm::sys::findProgramByName("clang");
@@ -114,8 +114,19 @@ void lowering::link(std::string obj_file, std::string exe_file) {
 
     if (brain::DEBUG) std::cerr << "object file: " << obj_file << ", executible: " << exe_file << std::endl;
 
+    // Get the optimization level.
+    std::string opt;
+    
+    switch(lto_level) {
+        case 0: opt = "-O0"; break;
+        case 1: opt = "-O1"; break;
+        case 2: opt = "-O2"; break;
+        case 3: opt = "-O3"; break;
+        default: opt = "-O2"; break;
+    }
+
     // Set the list of arguments to pass to clang.
-    std::vector<llvm::StringRef> clang_args = {clang.get(), "-O2", obj_file, "-o", exe_file};
+    std::vector<llvm::StringRef> clang_args = {clang.get(), opt, obj_file, "-o", exe_file};
     
     // Run and wait on the results of clang.
     std::string clang_err;
