@@ -13,8 +13,6 @@
 #include <unordered_set>
 #include <system_error>
 
-#include "llvm/Passes/PassBuilder.h"
-
 #include "util.h"
 #include "bf_error.h"
 
@@ -41,7 +39,7 @@ public:
 
     // Get specifically the input bf file or optimization level.
     std::string get_input_file();
-    llvm::PassBuilder::OptimizationLevel get_opt_level();
+    size_t get_opt_level();
 
     // Check input file integrity.
     bool check_input_file();
@@ -53,6 +51,6 @@ private:
 
     // Collection of valid option parameters, and flags.
     const std::unordered_set<std::string> arg_parameters{"-o"};
-    const std::unordered_set<std::string> arg_flags{"-h"};
+    const std::unordered_set<std::string> arg_flags{"-h", "-c", "-S"};
     const std::unordered_set<std::string> arg_optimization{"-O0", "-O1", "-O2", "-O3"};
 };

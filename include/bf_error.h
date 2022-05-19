@@ -22,6 +22,10 @@ enum class brain_errc {
     ast_lbracket,
     ast_rbracket,
     gen_bad_init,
+    lower_output,
+    lower_object,
+    lower_clang,
+    lower_linking,
     unknown
 };
 
@@ -57,6 +61,14 @@ namespace brain {
                     return "']' is missing it's opening '['";
                 case brain_errc::gen_bad_init:
                     return "unable to initialize LLVM module";
+                case brain_errc::lower_output:
+                    return "could not open output file";
+                case brain_errc::lower_object:
+                    return "could not compile LLVM IR";
+                case brain_errc::lower_clang:
+                    return "could not find clang for linking";
+                case brain_errc::lower_linking:
+                    return "unable to link the object file with clang";
                 default:
                     return "unknown error";
             }

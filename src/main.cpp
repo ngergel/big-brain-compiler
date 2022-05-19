@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string>
 #include <system_error>
+#include <filesystem>
 
 #include "llvm/Pass.h"
 #include "llvm/IR/LLVMContext.h"
@@ -17,14 +18,13 @@
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Verifier.h"
-#include "llvm/MC/MCContext.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
-#include "llvm/Target/TargetLoweringObjectFile.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/TargetRegistry.h"
+#include "llvm/Support/Program.h"
 #include "llvm/IRReader/IRReader.h"
 
 #include "util.h"
@@ -32,6 +32,7 @@
 #include "code_gen.h"
 #include "cmd_parser.h"
 #include "bf_error.h"
+#include "lowering.h"
 
 
 int main(int argc, char** argv) {
@@ -72,91 +73,42 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // Initialize the pass managers.
-    llvm::LoopAnalysisManager lam;
-    llvm::FunctionAnalysisManager fam;
-    llvm::CGSCCAnalysisManager cgam;
-    llvm::ModuleAnalysisManager mam;
+    // Lower the LLVM IR to it's specified target.
+    lowering lower_pass(std::move(gen_pass.mod), std::move(gen_pass.machine));
+    lower_pass.optimize(input.get_opt_level());
 
-    llvm::PassBuilder pb;
+    // Determine what the object file should be.
+    std::filesystem::path obj_file;
 
-    // Register all the basic analyses with the managers.
-    pb.registerModuleAnalyses(mam);
-    pb.registerCGSCCAnalyses(cgam);
-    pb.registerFunctionAnalyses(fam);
-    pb.registerLoopAnalyses(lam);
-    pb.crossRegisterProxies(lam, fam, cgam, mam);
+    if (input.option_exists("-o") && input.option_exists("-c")) obj_file = input.get_option("-o");
+    else obj_file = std::string(std::filesystem::path(input.get_input_file()).stem()) + (input.option_exists("-S") ? ".s" : ".o");
 
-    // Optimize the IR.
-    llvm::FunctionPassManager fpm = pb.buildFunctionSimplificationPipeline(input.get_opt_level(),
-                                                                           llvm::PassBuilder::ThinLTOPhase::None);
+    // Compile down the LLVM IR.
+    lower_pass.compile(obj_file, input.option_exists("-S"));
 
-    fpm.run(*gen_pass.mod->getFunction("main"), fam);
-
-    std::error_code ec;
-    llvm::raw_fd_ostream dest("new_test", ec, llvm::sys::fs::OF_None);
-
-    if (ec) {
-        llvm::errs() << "Could not open file: " << ec.message();
+    if (lower_pass.ec != brain_errc::no_err) {
+        std::cerr << brain::err_msg(lower_pass.ec.message());
         return 1;
+    } else if (input.option_exists("-S") || input.option_exists("-c")) {
+        return 0;
     }
 
-    llvm::legacy::PassManager pass;
-    auto FileType = llvm::CGFT_ObjectFile;
-    // llvm::MCContext* mctx;
+    // Get the executible name.
+    std::filesystem::path exe_file;
 
-    // llvm::TargetLibraryInfoImpl TLII(llvm::Triple(gen_pass.mod->getTargetTriple()));
-    // pass.add(new llvm::TargetLibraryInfoWrapperPass(TLII));
+    if (input.option_exists("-o")) exe_file = input.get_option("-o");
+    else exe_file = std::filesystem::path(input.get_input_file()).stem();
 
-    // llvm::LLVMTargetMachine &LLVMTM = static_cast<llvm::LLVMTargetMachine &>(*gen_pass.machine);
-    // llvm::MachineModuleInfoWrapperPass *MMIWP = new llvm::MachineModuleInfoWrapperPass(&LLVMTM);
-    // pass.add(MMIWP);
+    // Link the object file.
+    lower_pass.link(obj_file, exe_file);
 
-    // llvm::verifyModule(*gen_pass.mod, &llvm::errs());
+    // Since we lowered all the way to an executible, we now want to delete the object file.
+    std::filesystem::remove(obj_file);
 
-    // if (gen_pass.machine->addPassesToEmitMC(pass, mctx, dest)) {
-    //     llvm::errs() << "TargetMachine can't emit mc context";
-    //     return 1;
-    // }
-
-    // const_cast<llvm::TargetLoweringObjectFile *>(gen_pass.machine->getObjFileLowering())->Initialize(MMIWP->getMMI().getContext(), *gen_pass.machine);
-
-    if (gen_pass.machine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
-        llvm::errs() << "TargetMachine can't emit a file of this type";
+    if (lower_pass.ec != brain_errc::no_err) {
+        std::cerr << brain::err_msg(lower_pass.ec.message());
         return 1;
     }
-
-    pass.run(*gen_pass.mod);
-    dest.flush();
-
-
-    // llvm::InitializeNativeTarget();
-    // std::string err_str;
-
-    // llvm::EngineBuilder builder;//(std::move(gen_pass.mod));
-    // builder.setMCJITMemoryManager(std::make_unique<llvm::SectionMemoryManager>());
-    // builder.setOptLevel(llvm::CodeGenOpt::Level::Default);
-    // builder.setErrorStr(&err_str);
-    // auto executionEngine = builder.create();
-
-    // if (!executionEngine) {
-    //     std::cerr << err_str << "\n";
-    // } else {
-    //     std::cerr << "creation successful\n";
-    // }
-    // executionEngine->generateCodeForModule(&*gen_pass.mod);
-
-    // llvm::Module* m = gen_pass.mod.release();
-
-    // executionEngine->Modules[0]->dump();
-    // executionEngine->addModule(gen_pass.mod);
-    // executionEngine->generateCodeForModule(m);
-    // executionEngine->finalizeObject();
-    // auto res = executionEngine->runFunction("main");
-    // res->dump();
-
-
-    // gen_pass.mod->print(llvm::errs(), nullptr);
 
     return 0;
 }

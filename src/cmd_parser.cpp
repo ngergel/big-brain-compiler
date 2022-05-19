@@ -98,10 +98,9 @@ bool cmd_parser::check_input_file() {
 // ------------------------------------------------------------
 //  get_opt_level
 // 
-//  Get the optimization level, and return the LLVM token for
-//  simplicity. Defaults to O2.
+//  Get the optimization level, as an integer from 0 to 3.
 // ------------------------------------------------------------
-llvm::PassBuilder::OptimizationLevel cmd_parser::get_opt_level() {
+size_t cmd_parser::get_opt_level() {
 
     // Check if any optimization levels are given.
     unsigned opt = 2;
@@ -109,17 +108,5 @@ llvm::PassBuilder::OptimizationLevel cmd_parser::get_opt_level() {
         if (option_exists(o)) opt = std::stoi(o.substr(2, 1));
     }
 
-    // Return the appropriate LLVM token for it.
-    switch (opt) {
-        case 0:
-            return llvm::PassBuilder::OptimizationLevel::O0;
-        case 1:
-            return llvm::PassBuilder::OptimizationLevel::O1;
-        case 2:
-            return llvm::PassBuilder::OptimizationLevel::O2;
-        case 3:
-            return llvm::PassBuilder::OptimizationLevel::O3;
-        default:
-            return llvm::PassBuilder::OptimizationLevel::O2;
-    }
+    return opt;
 }

@@ -49,7 +49,7 @@ void brain::print_prog(std::shared_ptr<ast>& t) {
     else if (t->token != brain::root) std::cout << token_name(t->token);
 
     // Print out the children nodes.
-    for (auto child : t->children) print_ast(child);
+    for (auto child : t->children) print_prog(child);
 
     if (t->token == brain::loop) std::cout << "]";
     else if (t->token == brain::root) std::cout << "\n";
