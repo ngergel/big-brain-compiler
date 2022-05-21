@@ -20,7 +20,7 @@ struct ast;
 namespace brain {
 
     // Debug flag.
-    const bool DEBUG = true;
+    const bool DEBUG = false;
 
     // Cell array size. Set to 65536 so 16-bit ints automatically wrap,
     // for bigger a array this wrapping needs to be implemented.
