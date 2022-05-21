@@ -32,5 +32,11 @@ string(STRIP ${cxx_flags} cxx_flags)
 # Include project headers.
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
-# Build the source directory.
+# Build the source directory and test directory.
 add_subdirectory("${CMAKE_SOURCE_DIR}/src")
+
+
+# Include the CTest library.
+include(CTest)
+
+add_subdirectory("${CMAKE_SOURCE_DIR}/test")
