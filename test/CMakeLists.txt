@@ -8,6 +8,10 @@ add_test(NAME hello-short COMMAND ${CMAKE_SOURCE_DIR}/test/test.sh hello-short)
 # Calculates a cell's size, works for various interpreters/compilers.
 add_test(NAME cell-size COMMAND ${CMAKE_SOURCE_DIR}/test/test.sh cell-size)
 
+# Tests user input.
+add_test(NAME simple-inp COMMAND ${CMAKE_SOURCE_DIR}/test/test.sh simple-inp)
+add_test(NAME binary COMMAND ${CMAKE_SOURCE_DIR}/test/test.sh binary)
+
 # Misc. tests.
 add_test(NAME fibonacci COMMAND ${CMAKE_SOURCE_DIR}/test/test.sh fibonacci)
 add_test(NAME give-you-up COMMAND ${CMAKE_SOURCE_DIR}/test/test.sh give-you-up)

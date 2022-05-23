@@ -14,6 +14,7 @@ ROOT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && cd ../ 
 BRAINC="$ROOT_DIR/bin/brainc"
 INPUT="$ROOT_DIR/test/input/$1.bf"
 OUTPUT="$ROOT_DIR/test/output/$1.out"
+STDIN="$ROOT_DIR/test/stdin/$1.in"
 TEMP="$ROOT_DIR/test/temp"
 TEMP_OUT="$ROOT_DIR/test/temp.txt"
 
@@ -23,7 +24,7 @@ test ! -f $INPUT -o ! -f $OUTPUT -o ! -f $BRAINC && exit 1
 # Run the brainc compiler with the given input, and compare the output.
 $BRAINC $INPUT -o $TEMP &> /dev/null
 
-$TEMP > $TEMP_OUT
+test -f $STDIN && $TEMP < $STDIN > $TEMP_OUT || $TEMP > $TEMP_OUT
 if ! diff <(sed -e '$a\' $TEMP_OUT) <(sed -e '$a\' $OUTPUT) > /dev/null
 then
     rm -f $TEMP $TEMP_OUT
