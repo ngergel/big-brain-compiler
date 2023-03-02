@@ -27,14 +27,16 @@ namespace brain {
     const size_t CELL_SIZE = 65536;
 
     // Usage string.
-    const std::string USAGE = "\x1B[33mUsage:\033[0m brainc [-hv] [-O<n>] <input file> [-o <output file>]\n";
+    const std::string USAGE = "\x1B[33mUsage:\033[0m brainc [-hv] [-cS] [-O<n>] <input file> [-o <output file>]\n";
 
     // Options info string.
     const std::string OPTIONS = "Options:\n"
                                 "  -h, --help           Display this information.\n"
+                                "  -v, --version        Display the version information.\n"
                                 "  -o <output file>     Specify the name of the output file.\n"
                                 "  -O<n>                Set the optimization level. -O2 is default.\n"
-                                "  -v, --version        Display the version information.\n";
+                                "  -c                   Only compile to an object file, do not assemble and link.\n"
+                                "  -S                   Only compile and assemble, do not link.\n";
 
     const std::string VERSION = "Big Brain Compiler (c) 2023 Noah Gergel\n"
                                 "v1.1\n";

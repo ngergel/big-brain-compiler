@@ -58,7 +58,7 @@ std::string cmd_parser::get_option(const std::string& opt) {
 // ------------------------------------------------------------
 std::string cmd_parser::get_input_file() {
 
-    // Loop through every argument, looking for the bf extension.
+    // Loop through every argument.
     // We ignore arguments that have an option parameter preceeding them.
     for (size_t i = 1; i < args.size(); i++) {
         if (!arg_flags.count(args[i])

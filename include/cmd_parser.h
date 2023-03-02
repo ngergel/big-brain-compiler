@@ -51,6 +51,6 @@ private:
 
     // Collection of valid option parameters, and flags.
     const std::unordered_set<std::string> arg_parameters{"-o"};
-    const std::unordered_set<std::string> arg_flags{"-h", "-c", "-S"};
+    const std::unordered_set<std::string> arg_flags{"-h", "--help", "help", "-v", "--version", "-c", "-S"};
     const std::unordered_set<std::string> arg_optimization{"-O0", "-O1", "-O2", "-O3"};
 };

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#  ------------------------------------------------------------
-#   test.sh
+#   ------------------------------------------------------------
+#    test.sh
 #  
-#   Testing script that, given a test name, runs the associated
-#   test and checks that it's output matches the expected.
-#  ------------------------------------------------------------
+#    Testing script that, given a test name, runs the associated
+#    test and checks that it's output matches the expected.
+#   ------------------------------------------------------------
 
 
 # Get the root directory and set all the appropriate directories from there.
