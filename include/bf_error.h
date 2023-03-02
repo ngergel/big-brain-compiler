@@ -76,8 +76,6 @@ namespace brain {
     };
 }
 
-
-// IDK why but we need to declare a global function returning a static instance of the bf category.
 extern inline const brain::bf_category &bf_category() {
   static brain::bf_category c;
   return c;
