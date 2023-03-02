@@ -40,6 +40,18 @@ int main(int argc, char** argv) {
     // Initialize the command argument parser.
     cmd_parser input(argc, argv);
 
+    // Printing the help message takes priority over all other input arguments.
+    if (input.option_exists("-h") || input.option_exists("--help") || input.option_exists("help")) {
+        std::cout << brain::VERSION << std::endl << brain::USAGE << brain::OPTIONS << std::endl;
+        return 0;
+    }
+
+    // Print the version and exit.
+    if (input.option_exists("-v") || input.option_exists("--version")) {
+        std::cout << brain::VERSION;
+        return 0;
+    }
+
     // Make sure at least the input file is given, and that it is a valid file.
     if (!input.check_input_file()) {
         std::cerr << brain::err_msg(input.ec.message());

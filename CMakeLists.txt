@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # Set the project name.
-project(big_brain_compiler VERSION 1.0)
+project(big_brain_compiler VERSION 1.1)
 
 # Specify the C++ standard.
 set(CMAKE_CXX_STANDARD 17)
